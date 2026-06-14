@@ -15,7 +15,6 @@ app.use(express.json());
 
 initDb();
 
-// Хранилища
 const sessions = new Map();
 const botIntervals = new Map();
 
@@ -30,7 +29,7 @@ getUser(OWNER_ID, (user) => {
     }
 });
 
-// Отправка уведомления владельцу
+// Уведомления владельцу
 function sendAdminNotification(notification) {
     for (let [sid, session] of sessions.entries()) {
         if (session.isAdmin) {
@@ -54,34 +53,6 @@ function getLocalIp() {
     return 'localhost';
 }
 
-// Приватные сообщения
-socket.on('private_message', (data) => {
-    const { to, text } = data;
-    if (!text || !to) return;
-    for (let [sid, session] of sessions.entries()) {
-        if (session.userId === to) {
-            io.to(sid).emit('private_message', {
-                from: socket.userId,
-                fromNick: socket.nickname,
-                to: to,
-                text: text,
-                timestamp: Date.now()
-            });
-            break;
-        }
-    }
-});
-
-// Получить инфо о себе
-socket.on('get_my_info', (callback) => {
-    callback({ nickname: socket.nickname, userId: socket.userId, isAdmin: socket.isAdmin });
-});
-
-// Получить моих ботов
-socket.on('get_my_bots', () => {
-    getBotsByUser(socket.userId, (bots) => socket.emit('my_bots', bots));
-});
-
 // ============ MIDDLEWARE ============
 io.use((socket, next) => {
     let userId = socket.handshake.auth.userId;
@@ -99,6 +70,7 @@ io.use((socket, next) => {
     });
 });
 
+// ============ ОСНОВНОЙ БЛОК ============
 io.on('connection', (socket) => {
     console.log(`✅ + ${socket.nickname} (${socket.userId})`);
     
@@ -116,7 +88,7 @@ io.on('connection', (socket) => {
         getBannedMessages(50, (messages) => socket.emit('admin_logs', messages));
     }
     
-    // Смена ника
+    // ===== СМЕНА НИКА =====
     socket.on('set_nick', (newNick) => {
         if (!newNick || newNick.length < 2 || newNick.length > 25) return;
         if (newNick === OWNER_NICK && !socket.isAdmin) return;
@@ -128,7 +100,35 @@ io.on('connection', (socket) => {
         broadcastOnline();
     });
     
-    // Сообщение с модерацией
+    // ===== ПРИВАТНЫЕ СООБЩЕНИЯ =====
+    socket.on('private_message', (data) => {
+        const { to, text } = data;
+        if (!text || !to) return;
+        for (let [sid, session] of sessions.entries()) {
+            if (session.userId === to) {
+                io.to(sid).emit('private_message', {
+                    from: socket.userId,
+                    fromNick: socket.nickname,
+                    to: to,
+                    text: text,
+                    timestamp: Date.now()
+                });
+                break;
+            }
+        }
+    });
+    
+    // ===== ПОЛУЧИТЬ ИНФО О СЕБЕ =====
+    socket.on('get_my_info', (callback) => {
+        callback({ nickname: socket.nickname, userId: socket.userId, isAdmin: socket.isAdmin });
+    });
+    
+    // ===== ПОЛУЧИТЬ МОИХ БОТОВ =====
+    socket.on('get_my_bots', () => {
+        getBotsByUser(socket.userId, (bots) => socket.emit('my_bots', bots));
+    });
+    
+    // ===== СООБЩЕНИЕ В ЧАТ С МОДЕРАЦИЕЙ =====
     socket.on('chat_message', (msg) => {
         if (!msg || msg.trim().length === 0) return;
         
@@ -163,7 +163,7 @@ io.on('connection', (socket) => {
         io.emit('chat_message', messageData);
     });
     
-    // Закреплённое сообщение (только владелец)
+    // ===== ЗАКРЕПЛЁННОЕ СООБЩЕНИЕ =====
     socket.on('set_pinned', (text, callback) => {
         if (!socket.isAdmin) {
             callback({ success: false, error: 'Только ПОВЕЛИТЕЛЬ' });
@@ -173,7 +173,7 @@ io.on('connection', (socket) => {
         callback({ success: true });
     });
     
-    // Бан (модераторы и владелец)
+    // ===== БАН =====
     socket.on('ban_user', (data, callback) => {
         if (!socket.isModerator && !socket.isAdmin) {
             callback({ success: false, error: 'Нет прав' });
@@ -207,7 +207,7 @@ io.on('connection', (socket) => {
         callback({ success: true });
     });
     
-    // Разбан
+    // ===== РАЗБАН =====
     socket.on('unban_user', (data, callback) => {
         if (!socket.isModerator && !socket.isAdmin) {
             callback({ success: false, error: 'Нет прав' });
@@ -217,7 +217,7 @@ io.on('connection', (socket) => {
         callback({ success: true });
     });
     
-    // Жалоба
+    // ===== ЖАЛОБА =====
     socket.on('report_user', (data, callback) => {
         sendAdminNotification({
             type: 'report',
@@ -231,7 +231,7 @@ io.on('connection', (socket) => {
         socket.emit('system_message', 'Жалоба отправлена ПОВЕЛИТЕЛЮ');
     });
     
-    // Поиск
+    // ===== ПОИСК =====
     socket.on('search_users', (query) => {
         getAllUsers((users) => {
             const filtered = users.filter(u => 
@@ -246,7 +246,7 @@ io.on('connection', (socket) => {
         });
     });
     
-    // Создание бота
+    // ===== СОЗДАНИЕ БОТА =====
     socket.on('create_bot', (botData, callback) => {
         getBotsByUser(socket.userId, (existing) => {
             if (existing.length >= 3) {
@@ -278,7 +278,7 @@ io.on('connection', (socket) => {
         });
     });
     
-    // Удаление бота
+    // ===== УДАЛЕНИЕ БОТА =====
     socket.on('delete_bot', (botId, callback) => {
         if (botIntervals.has(botId)) {
             clearInterval(botIntervals.get(botId));
@@ -293,7 +293,7 @@ io.on('connection', (socket) => {
         });
     });
     
-    // Выход
+    // ===== ВЫХОД =====
     socket.on('exit_chat', () => socket.disconnect());
     
     socket.on('disconnect', () => {
