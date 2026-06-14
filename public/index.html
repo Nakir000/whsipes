@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0c10">
+    <title>Whisper — анонимный чат</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="app">
+    <div class="header">
+        <div>🤫 Whisper — полная анонимность</div>
+        <div><span id="onlineCount">0</span> онлайн | <button id="exitBtn" class="exit-btn">🚪 Выйти</button></div>
+    </div>
+    <div class="main">
+        <div class="sidebar">
+            <div class="nick-area">
+                <input type="text" id="nickInput" placeholder="Новый ник" maxlength="25">
+                <button id="setNickBtn">Сменить</button>
+            </div>
+            
+            <div class="section-title">🤖 Мои боты (макс 3)</div>
+            <div id="botsList" class="bots-list"></div>
+            <button id="createBotBtn" class="create-bot-btn">+ Создать бота</button>
+            
+            <div class="section-title">🔍 Поиск</div>
+            <input type="text" id="searchInput" placeholder="Найти пользователя...">
+            <div id="searchResults" class="search-results"></div>
+            
+            <div class="section-title">🟢 Онлайн (<span id="sidebarCount">0</span>)</div>
+            <ul id="onlineList"></ul>
+        </div>
+        
+        <div class="chat-area">
+            <div id="pinnedMessage" class="pinned-message"></div>
+            <div id="messages"></div>
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="Пиши что хочешь. Команды: /help, /report @ник причина">
+                <button id="sendBtn">➤</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="botModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>🤖 Создать бота</h3>
+        <input type="text" id="botName" placeholder="Имя бота">
+        <input type="number" id="botInterval" placeholder="Интервал (мин) 1-60" min="1" max="60">
+        <textarea id="botMessage" placeholder="Текст сообщения" rows="3"></textarea>
+        <button id="confirmCreateBot">Создать</button>
+    </div>
+</div>
+
+<div id="adminPanel" class="admin-panel" style="display:none;">
+    <div class="admin-panel-header">
+        🔔 УВЕДОМЛЕНИЯ ПОВЕЛИТЕЛЯ
+        <button id="clearNotifications">Очистить</button>
+    </div>
+    <div id="notificationsList" class="notifications-list"></div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/client.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "Whisper",
+  "short_name": "Whisper",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#0a0c10",
+  "background_color": "#0a0c10",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%232a6f3f'/%3E%3Ctext x='50' y='70' text-anchor='middle' fill='white' font-size='50'%3E🤫%3C/text%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
